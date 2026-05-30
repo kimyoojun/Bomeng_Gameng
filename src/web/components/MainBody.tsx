@@ -1,4 +1,5 @@
 import TopBtn from "./btn/TopBtn"
+import FuncBox from "./FuncBox"
 
 function MainBody () {
     return (
@@ -20,6 +21,9 @@ function MainBody () {
                     <TopBtn btnImg="/src/assets/message-dots.svg" btnName="AI 챗봇 시작하기" altName="메시지 아이콘" isInvert="invert()" fontSize="18px"/>
                     <TopBtn btnImg="/src/assets/calendar-clock.svg" btnName="일정 추천받기" altName="달력 아이콘" fontSize="18px" isBorder="solid 1px #e1e1e1"/>
                 </div>
+            </div>
+            <div>
+                <FuncBox/>
             </div>
         </div>
     )
