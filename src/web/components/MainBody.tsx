@@ -23,7 +23,14 @@ function MainBody () {
                 </div>
             </div>
             <div>
-                <FuncBox/>
+                <h2 style={{ fontSize: "30px", fontWeight: "700", width: "100%", marginBottom: "48px" }}>
+                    주요 기능
+                </h2>
+                <div style={{ display: "flex", gap: "32px", justifyContent: "center" }}>
+                    <FuncBox boxName="AI 맞춤 추천" boxInfo="당신의 취향에 맞는 여행지를 AI가 추천해드립니다" boxImg="/src/assets/sparkles-2.svg" boxAlt="스파클 아이콘"/>
+                    <FuncBox boxName="대화형 챗봇" boxInfo="자연스러운 대화로 여행 계획을 세워보세요" boxImg="/src/assets/message-dots.svg" boxAlt="메세지 아이콘"/>
+                    <FuncBox boxName="일정 자동 생성" boxInfo="AI가 최적의 여행 일정을 자동으로 만들어드립니다" boxImg="/src/assets/calendar-clock.svg" boxAlt="달력 아이콘"/>
+                </div>
             </div>
         </div>
     )
