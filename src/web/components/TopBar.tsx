@@ -1,4 +1,5 @@
 import TopBtn from "./btn/TopBtn"
+import { Link } from "react-router-dom"
 
 function TopBar () {
     return(
@@ -10,7 +11,9 @@ function TopBar () {
                 </a>
                 <div style={{ height: "100%", display: "flex", alignItems: "center", gap: "8px" }}>
                     <TopBtn btnImg="/src/assets/smart-home.svg" btnName="홈" altName="집 아이콘"/>
-                    <TopBtn btnImg="/src/assets/message-dots.svg" btnName="AI 챗봇" altName="메시지 아이콘"/>
+                    <Link to="/chat">
+                        <TopBtn btnImg="/src/assets/message-dots.svg" btnName="AI 챗봇" altName="메시지 아이콘"/>
+                    </Link>
                     <TopBtn btnImg="/src/assets/calendar-clock.svg" btnName="일정 추천" altName="달력 아이콘"/>
                 </div>
             </div>
