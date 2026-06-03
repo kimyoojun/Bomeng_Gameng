@@ -1,5 +1,6 @@
 import { useState } from "react";
 import OpenAI from "openai";
+import { useCookies } from "react-cookie"
 
 const client = new OpenAI({
     apiKey: import.meta.env.VITE_OPENAI_API_KEY,
@@ -14,7 +15,7 @@ import ChatBox from "./components/ChatBox";
 
 export default function Chat() {
 
-    const [messageValue, setMessage] = useState("")
+    const [ messageValue, setMessage ] = useState("")
 
     let messageAnswer: string = ""
 
@@ -22,16 +23,20 @@ export default function Chat() {
         setMessage(e.target.value)
     }
 
+    const [ cookies, setCookie, removeCookie ] = useCookies(["chattingRecord"])
+
     async function messageSend() {
         const response = await client.responses.create({
             model: "gpt-5.4",
             input: messageValue
         })
 
-        console.log(response);
-        console.log("구분");
-        console.log(response.output_text);
+        setCookie("chattingRecord", JSON.stringify(messageValue))
         messageAnswer = response.output_text
+
+        setCookie("chattingRecord", JSON.stringify(response.output_text))
+
+        console.log(cookies.chattingRecord)
     }
 
     return (
@@ -47,6 +52,16 @@ export default function Chat() {
                     {/* 채팅 박스 영역 */}
                     <div style={{ flex: 1, padding: "24px" }}>
                         <ChatBox chatText="안녕하세요! 👋 여행 계획을 도와드리는 AI 어시스턴트입니다. 어떤 여행을 계획하고 계신가요?"/>
+                        {
+                            messageValue
+                            ? <ChatBox chatText="안녕하세요! 👋 여행 계획을 도와드리는 AI 어시스턴트입니다. 어떤 여행을 계획하고 계신가요?"/>
+                            : null
+                        }
+                        {
+                           messageAnswer
+                           ? <ChatBox chatText="안녕하세요! 👋 여행 계획을 도와드리는 AI 어시스턴트입니다. 어떤 여행을 계획하고 계신가요?"/>
+                           : null 
+                        }
                     </div>
                     <div style={{ borderTop: "1px solid #e6e6e6" }}>
                         <div style={{ padding: "16px", display: "flex", gap: "8px" }}>
