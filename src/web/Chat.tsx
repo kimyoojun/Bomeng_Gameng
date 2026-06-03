@@ -1,6 +1,39 @@
+import { useState } from "react";
+import OpenAI from "openai";
+
+const client = new OpenAI({
+    apiKey: import.meta.env.VITE_OPENAI_API_KEY,
+
+    // 현재 api서버 없이 클라이언트에서 api key를 가져와서 위험한상태 
+    // // 아래 코드는 위험을 인지하고 있으니 실행하겠다는 뜻 
+    // // 테스트용 코드이기 때문에 추후 API 서버를 통해 api key를 가져와야 함 
+    dangerouslyAllowBrowser: true,
+})
+
 import ChatBox from "./components/ChatBox";
 
 export default function Chat() {
+
+    const [messageValue, setMessage] = useState("")
+
+    let messageAnswer: string = ""
+
+    const saveMessage = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setMessage(e.target.value)
+    }
+
+    async function messageSend() {
+        const response = await client.responses.create({
+            model: "gpt-5.4",
+            input: messageValue
+        })
+
+        console.log(response);
+        console.log("구분");
+        console.log(response.output_text);
+        messageAnswer = response.output_text
+    }
+
     return (
         <div style={{ width: "100%", height: "100%", display: "flex", justifyContent: "center" }}>
             <div style={{ padding: "32px 16px" }}>
@@ -17,8 +50,8 @@ export default function Chat() {
                     </div>
                     <div style={{ borderTop: "1px solid #e6e6e6" }}>
                         <div style={{ padding: "16px", display: "flex", gap: "8px" }}>
-                            <input placeholder="여행에 대해 물어보세요..." style={{ width: "100%", backgroundColor: "#f3f3f5", border: "none", borderRadius: "6px", padding: "4px 12px" }}/>
-                            <button style={{ borderRadius: "6px", textAlign: "center", border: "none", backgroundColor: "#8d8d8d", padding: "5px 12px" }}>
+                            <input onChange={saveMessage} value={messageValue} placeholder="여행에 대해 물어보세요..." style={{ width: "100%", backgroundColor: "#f3f3f5", border: "none", borderRadius: "6px", padding: "4px 12px" }}/>
+                            <button onClick={messageSend} style={{ borderRadius: "6px", textAlign: "center", border: "none", backgroundColor: "#8d8d8d", padding: "5px 12px" }}>
                                 <img src="/src/assets/send.svg" alt="전송 아이콘" style={{ width: "16px", height: "16px", marginTop: "5px", filter: "brightness(0) invert(1)" }}/>
                             </button>
                         </div>
