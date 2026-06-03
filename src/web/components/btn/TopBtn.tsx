@@ -16,14 +16,14 @@ function TopBtn (props:TopBtnProps) {
     const [ isHover, setIsHover ] = useState(false)
 
     return (
-        <a 
+        <button 
         className="tBtn" 
         onMouseEnter={() => setIsHover(true)}
         onMouseLeave={() => setIsHover(false)} 
         style={{ backgroundColor: isHover ? props.hoverColor ?? "#f0f0f0" : props.bgColor ?? "white", padding: "8px", borderRadius: "6px", fontSize: props.fontSize ?? "15px", fontWeight: "500", color: "black", display: "flex", alignItems: "center", filter: props.isInvert, border: props.isBorder ?? "none" }}>
             <img src={props.btnImg} style={{ marginRight: "15px" }} alt={props.altName}/>
             {props.btnName}
-        </a>
+        </button>
     )
 }
 
