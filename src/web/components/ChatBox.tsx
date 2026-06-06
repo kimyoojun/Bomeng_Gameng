@@ -5,7 +5,7 @@ type ChatBoxProps = {
 
 function ChatBox(props: ChatBoxProps) {
     return(
-        <div style={{ width: "100%", display: "flex", alignItems: "start", justifyContent: props.isRole == "assistant" ? "start" : "end", gap: "12px", marginBottom: "10px" }}>
+        <div style={{ width: "100%", display: "flex", alignItems: "start", justifyContent: props.isRole == "assistant" ? "start" : "end", gap: "12px", marginBottom: "16px" }}>
             {
                 props.isRole == "assistant"
                 ? <div style={{ width: "32px", height: "32px", borderRadius: "9999px", backgroundColor: "#dbeafe", display: "flex", justifyContent: "center", alignItems: "center" }}>
