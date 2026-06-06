@@ -1,6 +1,9 @@
 import { useState } from "react";
 import OpenAI from "openai";
-import { useCookies } from "react-cookie"
+import supabase from "./lib/supabase";
+
+// 임시 유저 uuid 발급
+const user_uuid = "160d0ff2-ed08-4d29-83a4-eceb55c83836"
 
 const client = new OpenAI({
     apiKey: import.meta.env.VITE_OPENAI_API_KEY,
@@ -14,9 +17,8 @@ const client = new OpenAI({
 import ChatBox from "./components/ChatBox";
 
 export default function Chat() {
-
-    // 웹 쿠키에 저장할 Json 형태의 쿠키 타입 정의
-    interface messageCookie {
+    
+    interface messageRecode {
         role: "user" | "assistant"
         content: string
     }
@@ -25,45 +27,74 @@ export default function Chat() {
     // messageValue: 유저의 질문을 저장할 변수
     let [ messageValue, setMessage ] = useState("")
 
-    const [ cookies, setCookie ] = useCookies(["chattingRecord"])
+    let messageRecode: messageRecode[] = []
 
     // AI 답변을 저장할 변수
     let messageAnswer: string = ""
 
-    // 웹 쿠키에 저장할 Json 데이터가 들어가는 리스트
-    let messageCookie: messageCookie[] = cookies.chattingRecord
+    const selectChat = async () => {
+        const { data: chatSelectData, error: chatSelectError } = await supabase
+        .from("chatting")
+        .select("chat")
+        .eq("user_uuid", user_uuid)
+
+        if (chatSelectError) {
+            console.log(chatSelectError)
+        }
+
+        if (chatSelectData) {
+            messageRecode = chatSelectData?.[0].chat
+            console.log(messageRecode = chatSelectData?.[0].chat)
+        }
+    }
+    selectChat()
 
     const saveMessage = (e: React.ChangeEvent<HTMLInputElement>) => {
         setMessage(e.target.value)
     }
-
+    
+    // removeCookie("chattingRecord")
     async function messageSend() {
+
+        messageRecode.push({
+            role: "user",
+            content: messageValue
+        })
+
+        const { data: userChatData, error: userChatError } = await supabase
+            .from("chatting")
+            .update({ chat: messageRecode })
+            .eq("user_uuid", user_uuid)
+            .select()
+
+        if (userChatError) {
+            console.error(userChatError)
+        }
+
+        selectChat()
+
         const response = await client.responses.create({
             model: "gpt-5.4",
             input: messageValue
         })
-
-        messageCookie = cookies.chattingRecord
-
-        // 유저의 질문을 쿠키 데이터 리스트에 추가
-        messageCookie.push({
-            role: "user",
-            content: messageValue
-        })
-        // 쿠키 데이터 리스트 쿠키에 저장
-        setCookie("chattingRecord", messageCookie)
-
         messageAnswer = response.output_text
 
-        messageCookie = cookies.chattingRecord
-        
-        // AI 답변을 쿠키 데이터 리스트에 추가
-        messageCookie.push({
+        messageRecode.push({
             role: "assistant",
             content: messageAnswer
         })
-        // 쿠키 데이터 리스트를 쿠키에 저장
-        setCookie("chattingRecord", messageCookie)
+
+        const { data: assistantChatData, error: assistantChatError } = await supabase
+            .from("chatting")
+            .update({ chat: messageRecode })
+            .eq("user_uuid", user_uuid)
+            .select()
+
+        if (assistantChatError) {
+            console.error(assistantChatError)
+        }
+
+        selectChat()
     }
 
     return (
@@ -79,7 +110,7 @@ export default function Chat() {
                     {/* 채팅 박스 영역 */}
                     <div style={{ flex: 1, padding: "24px", overflowY: "auto" }}>
                         <ChatBox isRole="assistant" chatText="안녕하세요! 👋 여행 계획을 도와드리는 AI 어시스턴트입니다. 어떤 여행을 계획하고 계신가요?"/>
-                        {messageCookie.map((message, index) => (
+                        {messageRecode?.map((message, index) => (
                             <ChatBox key={index} isRole={message.role} chatText={message.content}/>
                         ))}
                     </div>
