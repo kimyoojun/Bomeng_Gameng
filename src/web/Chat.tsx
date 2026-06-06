@@ -15,15 +15,27 @@ import ChatBox from "./components/ChatBox";
 
 export default function Chat() {
 
-    const [ messageValue, setMessage ] = useState("")
+    // 웹 쿠키에 저장할 Json 형태의 쿠키 타입 정의
+    interface messageCookie {
+        role: "user" | "assistant"
+        content: string
+    }
 
+    // input 칸에 쓰이는 유저의 질문을 실시간으로 받아오기위해 useState 사용
+    // messageValue: 유저의 질문을 저장할 변수
+    let [ messageValue, setMessage ] = useState("")
+
+    const [ cookies, setCookie ] = useCookies(["chattingRecord"])
+
+    // AI 답변을 저장할 변수
     let messageAnswer: string = ""
+
+    // 웹 쿠키에 저장할 Json 데이터가 들어가는 리스트
+    let messageCookie: messageCookie[] = cookies.chattingRecord
 
     const saveMessage = (e: React.ChangeEvent<HTMLInputElement>) => {
         setMessage(e.target.value)
     }
-
-    const [ cookies, setCookie, removeCookie ] = useCookies(["chattingRecord"])
 
     async function messageSend() {
         const response = await client.responses.create({
@@ -31,18 +43,33 @@ export default function Chat() {
             input: messageValue
         })
 
-        setCookie("chattingRecord", JSON.stringify(messageValue))
+        messageCookie = cookies.chattingRecord
+
+        // 유저의 질문을 쿠키 데이터 리스트에 추가
+        messageCookie.push({
+            role: "user",
+            content: messageValue
+        })
+        // 쿠키 데이터 리스트 쿠키에 저장
+        setCookie("chattingRecord", messageCookie)
+
         messageAnswer = response.output_text
 
-        setCookie("chattingRecord", JSON.stringify(response.output_text))
-
-        console.log(cookies.chattingRecord)
+        messageCookie = cookies.chattingRecord
+        
+        // AI 답변을 쿠키 데이터 리스트에 추가
+        messageCookie.push({
+            role: "assistant",
+            content: messageAnswer
+        })
+        // 쿠키 데이터 리스트를 쿠키에 저장
+        setCookie("chattingRecord", messageCookie)
     }
 
     return (
         <div style={{ width: "100%", height: "100%", display: "flex", justifyContent: "center" }}>
             <div style={{ padding: "32px 16px" }}>
-                <div style={{ width: "860px", height: "480px", border: "1px solid #e6e6e6", borderRadius: "12px", display: "flex", flexDirection: "column" }}>
+                <div style={{ width: "860px", height: "600px", border: "1px solid #e6e6e6", borderRadius: "12px", display: "flex", flexDirection: "column" }}>
                     <div style={{ borderBottom: "1px solid #e6e6e6", padding: "24px" }}>
                         <h4 style={{ margin: 0, width: "100%", display: "flex", justifyContent: "start", gap: "8px", fontSize: "16px", fontWeight: "500", color: "black", textAlign: "center" }}>
                             <img src="/src/assets/chatbot.png" alt="챗봇 아이콘" style={{ width: "24px", height: "24px", filter: "brightness(0) saturate(100%) invert(44%) sepia(73%) saturate(7210%) hue-rotate(217deg) brightness(97%) contrast(103%)" }}/>
@@ -50,19 +77,13 @@ export default function Chat() {
                         </h4>
                     </div>
                     {/* 채팅 박스 영역 */}
-                    <div style={{ flex: 1, padding: "24px" }}>
-                        <ChatBox chatText="안녕하세요! 👋 여행 계획을 도와드리는 AI 어시스턴트입니다. 어떤 여행을 계획하고 계신가요?"/>
-                        {
-                            messageValue
-                            ? <ChatBox chatText="안녕하세요! 👋 여행 계획을 도와드리는 AI 어시스턴트입니다. 어떤 여행을 계획하고 계신가요?"/>
-                            : null
-                        }
-                        {
-                           messageAnswer
-                           ? <ChatBox chatText="안녕하세요! 👋 여행 계획을 도와드리는 AI 어시스턴트입니다. 어떤 여행을 계획하고 계신가요?"/>
-                           : null 
-                        }
+                    <div style={{ flex: 1, padding: "24px", overflowY: "auto" }}>
+                        
+                        {messageCookie.map((message, index) => (
+                            <ChatBox key={index} chatText={message.content}/>
+                        ))}
                     </div>
+                    {/* 채팅 박스 영역 끝 */}
                     <div style={{ borderTop: "1px solid #e6e6e6" }}>
                         <div style={{ padding: "16px", display: "flex", gap: "8px" }}>
                             <input onChange={saveMessage} value={messageValue} placeholder="여행에 대해 물어보세요..." style={{ width: "100%", backgroundColor: "#f3f3f5", border: "none", borderRadius: "6px", padding: "4px 12px" }}/>
