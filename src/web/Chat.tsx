@@ -78,9 +78,9 @@ export default function Chat() {
                     </div>
                     {/* 채팅 박스 영역 */}
                     <div style={{ flex: 1, padding: "24px", overflowY: "auto" }}>
-                        
+                        <ChatBox isRole="assistant" chatText="안녕하세요! 👋 여행 계획을 도와드리는 AI 어시스턴트입니다. 어떤 여행을 계획하고 계신가요?"/>
                         {messageCookie.map((message, index) => (
-                            <ChatBox key={index} chatText={message.content}/>
+                            <ChatBox key={index} isRole={message.role} chatText={message.content}/>
                         ))}
                     </div>
                     {/* 채팅 박스 영역 끝 */}
