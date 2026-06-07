@@ -36,8 +36,17 @@ export default function Chat() {
     const [ chatting, setChatting ] = useState<messageRecode[]>([])
 
     // 채팅 내역이 추가될 떄 실행하는 함수
-    const chattingUpdate = (msgs: messageRecode) => {
+    const chattingUpdate = async (msgs: messageRecode) => {
+        const newChatting = [...chatting, msgs]
+
         setChatting(prev => [...prev, msgs])
+
+        await axios.post(
+                    `http://127.0.0.1:8000/users/${user_uuid}/chats`,
+                    {
+                        chats: newChatting
+                    }
+                )
     }
 
     // AI 답변을 저장할 변수
@@ -62,8 +71,27 @@ export default function Chat() {
     const saveMessage = (e: React.ChangeEvent<HTMLInputElement>) => {
         setMessage(e.target.value)
     }
+
+    // useEffect(() => {
+    //     console.log("업데이트 전", chatting)
+    //     const chatUpdate = async() => {
+    //         try {
+    //             await axios.post(
+    //                 `http://127.0.0.1:8000/users/${user_uuid}/chats`,
+    //                 {
+    //                     chats: chatting
+    //                 }
+    //             )
+                
+    //         } catch (error: any) {
+    //             console.log(error.response?.data.detail[0]);
+    //             console.log(error.response?.data.detail[0].loc);
+    //             console.log(error.response?.data.detail[0].input);
+    //         }
+    //     }
+    //     chatUpdate()
+    // }, [chatting]);
     
-    // removeCookie("chattingRecord")
     async function messageSend() {
 
         // 사용자의 채팅과 role 타입을 담음
@@ -73,19 +101,36 @@ export default function Chat() {
         }
 
         // 사용자의 채팅과 role타입을 채팅 내역에 추가
-        chattingUpdate(messages)
+        // chattingUpdate(messages)
+
+        const newChatting = [...chatting, messages];
+
+        setChatting(newChatting);
 
         // 변경된 채팅 내역을 DB에 update
-        const { error: userChatError } = await supabase
-            .from("chatting")
-            .update({ chat: chatting })
-            .eq("user_uuid", user_uuid)
-            .select()
+        // const { error: userChatError } = await supabase
+        //     .from("chatting")
+        //     .update({ chat: chatting })
+        //     .eq("user_uuid", user_uuid)
+        //     .select()
 
-        if (userChatError) {
-            console.error(userChatError)
-        }
-
+        // if (userChatError) {
+        //     console.error(userChatError)
+        // }
+        // try {
+        //     await axios.post(
+        //         `http://127.0.0.1:8000/users/${user_uuid}/chats`,
+        //         {
+        //             chats: chatting
+        //         }
+        //     )
+                
+        //     } catch (error: any) {
+        //         console.log(error.response?.data.detail[0]);
+        //         console.log(error.response?.data.detail[0].loc);
+        //         console.log(error.response?.data.detail[0].input);
+        //     }
+        
         const response = await client.responses.create({
             model: "gpt-5.4",
             input: messageValue
@@ -99,18 +144,33 @@ export default function Chat() {
         }
 
         // AI에 답변과 role 타입을 채팅 내역에 추가
-        chattingUpdate(messages)
+        // chattingUpdate(messages)
+
+        const anewChatting = [...chatting, messages];
+
+        setChatting(anewChatting);
 
         // 추가된 채팅 내역을 DB에 update
-        const { error: assistantChatError } = await supabase
-            .from("chatting")
-            .update({ chat: chatting })
-            .eq("user_uuid", user_uuid)
-            .select()
+        // const { error: assistantChatError } = await supabase
+        //     .from("chatting")
+        //     .update({ chat: chatting })
+        //     .eq("user_uuid", user_uuid)
+        //     .select()
 
-        if (assistantChatError) {
-            console.error(assistantChatError)
-        }
+        // if (assistantChatError) {
+        //     console.error(assistantChatError)
+        // }
+        // try {
+        //     await axios.post(
+        //         `http://127.0.0.1:8000/users/${user_uuid}/chats`,
+        //         {
+        //             chat: chatting
+        //         }
+        //     )
+        // } catch (error) {
+        //     console.log(error)
+        // }
+
     }
 
     return (
