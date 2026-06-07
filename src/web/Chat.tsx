@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import OpenAI from "openai";
 import supabase from "./lib/supabase";
+import axios from "axios";
 
 // 임시 유저 uuid 발급
 const user_uuid = "160d0ff2-ed08-4d29-83a4-eceb55c83836"
@@ -42,20 +43,17 @@ export default function Chat() {
     // AI 답변을 저장할 변수
     let messageAnswer: string = ""
 
-    // 처음 마운트될 때 DB에서 채팅내역을 불러옴
+    // 처음 마운트될 때 API서버로 DB 채팅내역 요청을 보냄
     useEffect(() => {
         const selectChat = async () => {
-            const { data: chatSelectData, error: chatSelectError } = await supabase
-                .from("chatting")
-                .select("chat")
-                .eq("user_uuid", user_uuid)
+            try{
+                const select_chat = await axios.get(
+                    `http://127.0.0.1:8000/users/${user_uuid}/chats`
+                )
 
-            if (chatSelectError) {
-                console.log(chatSelectError)
-            }
-
-            if (chatSelectData) {
-                setChatting(chatSelectData?.[0].chat ?? [])
+                setChatting(select_chat.data[0].chat ?? [])
+            } catch (error) {
+                console.error(error)
             }
         }
     selectChat()
