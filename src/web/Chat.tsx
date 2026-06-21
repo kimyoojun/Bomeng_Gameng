@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import OpenAI from "openai";
-import supabase from "./lib/supabase";
 import axios from "axios";
 
 // 임시 유저 uuid 발급
@@ -24,9 +23,6 @@ export default function Chat() {
         content: string
     }
 
-    // 사용자가 채팅시 messageRecode 타입으로 데이터가 담김
-    let messages: messageRecode
-
     // input 칸에 쓰이는 유저의 질문을 실시간으로 받아오기위해 useState 사용
     // messageValue: 유저의 질문을 저장할 변수
     const [ messageValue, setMessage ] = useState("")
@@ -35,26 +31,10 @@ export default function Chat() {
     // 사용자의 채팅 내역을 담는 배열
     const [ chatting, setChatting ] = useState<messageRecode[]>([])
 
-    // 채팅 내역이 추가될 떄 실행하는 함수
-    const chattingUpdate = async (msgs: messageRecode) => {
-        const newChatting = [...chatting, msgs]
-
-        setChatting(prev => [...prev, msgs])
-
-        await axios.post(
-                    `http://127.0.0.1:8000/users/${user_uuid}/chats`,
-                    {
-                        chats: newChatting
-                    }
-                )
-    }
-
     // AI 답변을 저장할 변수
     let messageAnswer: string = ""
 
-    // 처음 마운트될 때 API서버로 DB 채팅내역 요청을 보냄
-    useEffect(() => {
-        const selectChat = async () => {
+    const selectChat = async () => {
             try{
                 const select_chat = await axios.get(
                     `http://127.0.0.1:8000/users/${user_uuid}/chats`
@@ -65,112 +45,75 @@ export default function Chat() {
                 console.error(error)
             }
         }
-    selectChat()
+
+    // 처음 마운트될 때 API서버로 DB 채팅내역 요청을 보냄
+    useEffect(() => {
+        selectChat()
     }, []) // []를 빈칸으로 두면 처음 마운트될 때만 실행됨
+
+    useEffect(() => {
+        console.log(chatting)
+    }, [chatting])
 
     const saveMessage = (e: React.ChangeEvent<HTMLInputElement>) => {
         setMessage(e.target.value)
     }
-
-    // useEffect(() => {
-    //     console.log("업데이트 전", chatting)
-    //     const chatUpdate = async() => {
-    //         try {
-    //             await axios.post(
-    //                 `http://127.0.0.1:8000/users/${user_uuid}/chats`,
-    //                 {
-    //                     chats: chatting
-    //                 }
-    //             )
-                
-    //         } catch (error: any) {
-    //             console.log(error.response?.data.detail[0]);
-    //             console.log(error.response?.data.detail[0].loc);
-    //             console.log(error.response?.data.detail[0].input);
-    //         }
-    //     }
-    //     chatUpdate()
-    // }, [chatting]);
     
     async function messageSend() {
 
+
+        const select_chats = await axios.get(
+            `http://127.0.0.1:8000/users/${user_uuid}/chats`
+        )
+
+
         // 사용자의 채팅과 role 타입을 담음
-        messages = {
+        const user_messages: messageRecode = {
             role: "user",
             content: messageValue
         }
 
-        // 사용자의 채팅과 role타입을 채팅 내역에 추가
-        // chattingUpdate(messages)
+        let chatRecode: messageRecode[] = select_chats.data[0].chat ?? []
 
-        const newChatting = [...chatting, messages];
+        chatRecode.push(user_messages)
 
-        setChatting(newChatting);
+        const post_chats = await axios.post(
+            `http://127.0.0.1:8000/users/${user_uuid}/chats`,
+            {
+                chats: chatRecode
+            }
+        )
 
-        // 변경된 채팅 내역을 DB에 update
-        // const { error: userChatError } = await supabase
-        //     .from("chatting")
-        //     .update({ chat: chatting })
-        //     .eq("user_uuid", user_uuid)
-        //     .select()
+        setChatting(chatRecode)
 
-        // if (userChatError) {
-        //     console.error(userChatError)
-        // }
-        // try {
-        //     await axios.post(
-        //         `http://127.0.0.1:8000/users/${user_uuid}/chats`,
-        //         {
-        //             chats: chatting
-        //         }
-        //     )
-                
-        //     } catch (error: any) {
-        //         console.log(error.response?.data.detail[0]);
-        //         console.log(error.response?.data.detail[0].loc);
-        //         console.log(error.response?.data.detail[0].input);
-        //     }
-        
+        console.log("유저 대화 내용 저장", post_chats)
+
+        // AI 에게 질문하고 답변을 받는 코드
         const response = await client.responses.create({
             model: "gpt-5.4",
             input: messageValue
         })
+
         messageAnswer = response.output_text
 
         // AI에 답변과 role 타입을 담음
-        messages = {
+        const ai_message: messageRecode = {
             role: "assistant",
             content: messageAnswer
         }
 
-        // AI에 답변과 role 타입을 채팅 내역에 추가
-        // chattingUpdate(messages)
+        chatRecode.push(ai_message)
 
-        const anewChatting = [...chatting, messages];
+        const post_ai_chats = await axios.post(
+            `http://127.0.0.1:8000/users/${user_uuid}/chats`,
+            {
+                chats: chatRecode
+            }
+        )
 
-        setChatting(anewChatting);
+        console.log("ai 대화내용 저장", post_ai_chats)
 
-        // 추가된 채팅 내역을 DB에 update
-        // const { error: assistantChatError } = await supabase
-        //     .from("chatting")
-        //     .update({ chat: chatting })
-        //     .eq("user_uuid", user_uuid)
-        //     .select()
-
-        // if (assistantChatError) {
-        //     console.error(assistantChatError)
-        // }
-        // try {
-        //     await axios.post(
-        //         `http://127.0.0.1:8000/users/${user_uuid}/chats`,
-        //         {
-        //             chat: chatting
-        //         }
-        //     )
-        // } catch (error) {
-        //     console.log(error)
-        // }
-
+        setChatting(chatRecode)
     }
 
     return (
@@ -184,7 +127,7 @@ export default function Chat() {
                         </h4>
                     </div>
                     {/* 채팅 박스 영역 */}
-                    <div style={{ flex: 1, padding: "24px", overflowY: "auto" }}>
+                    <div style={{ flex: 1, padding: "24px", overflowY: "auto", display: "flex", flexDirection: "column" }}>
                         <ChatBox isRole="assistant" chatText="안녕하세요! 👋 여행 계획을 도와드리는 AI 어시스턴트입니다. 어떤 여행을 계획하고 계신가요?"/>
                         {chatting?.map((message, index) => (
                             <ChatBox key={index} isRole={message.role} chatText={message.content}/>
