@@ -5,15 +5,6 @@ import axios from "axios";
 // 임시 유저 uuid 발급
 const user_uuid = "160d0ff2-ed08-4d29-83a4-eceb55c83836"
 
-const client = new OpenAI({
-    apiKey: import.meta.env.VITE_OPENAI_API_KEY,
-
-    // 현재 api서버 없이 클라이언트에서 api key를 가져와서 위험한상태 
-    // // 아래 코드는 위험을 인지하고 있으니 실행하겠다는 뜻 
-    // // 테스트용 코드이기 때문에 추후 API 서버를 통해 api key를 가져와야 함 
-    dangerouslyAllowBrowser: true,
-})
-
 import ChatBox from "./components/ChatBox";
 
 export default function Chat() {
@@ -31,8 +22,6 @@ export default function Chat() {
     // 사용자의 채팅 내역을 담는 배열
     const [ chatting, setChatting ] = useState<messageRecode[]>([])
 
-    // AI 답변을 저장할 변수
-    let messageAnswer: string = ""
 
     const selectChat = async () => {
             try{
@@ -60,60 +49,17 @@ export default function Chat() {
     }
     
     async function messageSend() {
-
-
-        const select_chats = await axios.get(
-            `http://127.0.0.1:8000/users/${user_uuid}/chats`
-        )
-
-
-        // 사용자의 채팅과 role 타입을 담음
-        const user_messages: messageRecode = {
-            role: "user",
-            content: messageValue
-        }
-
-        let chatRecode: messageRecode[] = select_chats.data[0].chat ?? []
-
-        chatRecode.push(user_messages)
-
         const post_chats = await axios.post(
             `http://127.0.0.1:8000/users/${user_uuid}/chats`,
             {
-                chats: chatRecode
+                role: "user",
+                content: messageValue
             }
         )
+        
+        selectChat()
 
-        setChatting(chatRecode)
-
-        console.log("유저 대화 내용 저장", post_chats)
-
-        // AI 에게 질문하고 답변을 받는 코드
-        const response = await client.responses.create({
-            model: "gpt-5.4",
-            input: messageValue
-        })
-
-        messageAnswer = response.output_text
-
-        // AI에 답변과 role 타입을 담음
-        const ai_message: messageRecode = {
-            role: "assistant",
-            content: messageAnswer
-        }
-
-        chatRecode.push(ai_message)
-
-        const post_ai_chats = await axios.post(
-            `http://127.0.0.1:8000/users/${user_uuid}/chats`,
-            {
-                chats: chatRecode
-            }
-        )
-
-        console.log("ai 대화내용 저장", post_ai_chats)
-
-        setChatting(chatRecode)
+        console.log(post_chats)
     }
 
     return (
