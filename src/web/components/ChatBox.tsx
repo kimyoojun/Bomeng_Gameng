@@ -1,3 +1,6 @@
+import ReactMarkDown from "react-markdown"
+import remarkGfm from "remark-gfm"
+
 type ChatBoxProps = {
     chatText: string
     isRole: string
@@ -14,9 +17,11 @@ function ChatBox(props: ChatBoxProps) {
                 : null
             }
             <div style={{ backgroundColor: props.isRole == "assistant" ? "#f6f3f4" : "#155dfc", borderRadius: "16px", padding: "12px 16px" }}>
-                <p style={{ textAlign: "start", color: props.isRole == "assistant" ? "black" : "white", fontSize: "16px", whiteSpace: "pre-wrap" }}>
-                    {props.chatText}
-                </p>
+                <div style={{ textAlign: "start", color: props.isRole == "assistant" ? "black" : "white", fontSize: "16px", whiteSpace: "pre-wrap" }}>
+                    <ReactMarkDown remarkPlugins={[remarkGfm]}>
+                        {props.chatText}
+                    </ReactMarkDown>
+                </div>
             </div>
         </div>
     )
