@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import OpenAI from "openai";
 import axios from "axios";
 
 // 임시 유저 uuid 발급
@@ -22,7 +21,6 @@ export default function Chat() {
     // 사용자의 채팅 내역을 담는 배열
     const [ chatting, setChatting ] = useState<messageRecode[]>([])
 
-
     const selectChat = async () => {
             try{
                 const select_chat = await axios.get(
@@ -41,7 +39,7 @@ export default function Chat() {
     }, []) // []를 빈칸으로 두면 처음 마운트될 때만 실행됨
 
     useEffect(() => {
-        console.log(chatting)
+        // console.log(chatting)
     }, [chatting])
 
     const saveMessage = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -49,7 +47,12 @@ export default function Chat() {
     }
     
     async function messageSend() {
-        const post_chats = await axios.post(
+        setChatting(prev => [...prev, {
+            role: "user",
+            content: messageValue
+        }])
+
+        await axios.post(
             `http://127.0.0.1:8000/users/${user_uuid}/chats`,
             {
                 role: "user",
@@ -58,8 +61,6 @@ export default function Chat() {
         )
         
         selectChat()
-
-        console.log(post_chats)
     }
 
     return (
