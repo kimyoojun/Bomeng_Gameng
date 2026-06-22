@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 
 // 임시 유저 uuid 발급
@@ -22,24 +22,36 @@ export default function Chat() {
     const [ chatting, setChatting ] = useState<messageRecode[]>([])
 
     const selectChat = async () => {
-            try{
-                const select_chat = await axios.get(
-                    `http://127.0.0.1:8000/users/${user_uuid}/chats`
-                )
+        try{
+            const select_chat = await axios.get(
+                `http://127.0.0.1:8000/users/${user_uuid}/chats`
+            )
 
-                setChatting(select_chat.data[0].chat ?? [])
-            } catch (error) {
-                console.error(error)
-            }
+            setChatting(select_chat.data[0].chat ?? [])
+        } catch (error) {
+            console.error(error)
         }
+    }
+
+    // useRef가 어떤 요소에 적용되는지 <HTMLDivElement>를 사용해서 명시해줌
+    const scrollRef = useRef<HTMLDivElement>(null)
+
+    // 자동으로 스크롤 내리는 기능 
+    const scrollToBottom = () => {
+        if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+        }
+    }
 
     // 처음 마운트될 때 API서버로 DB 채팅내역 요청을 보냄
     useEffect(() => {
         selectChat()
+        scrollToBottom()
     }, []) // []를 빈칸으로 두면 처음 마운트될 때만 실행됨
 
     useEffect(() => {
         // console.log(chatting)
+        scrollToBottom()
     }, [chatting])
 
     const saveMessage = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,7 +86,7 @@ export default function Chat() {
                         </h4>
                     </div>
                     {/* 채팅 박스 영역 */}
-                    <div style={{ flex: 1, padding: "24px", overflowY: "auto", display: "flex", flexDirection: "column" }}>
+                    <div ref={scrollRef} style={{ flex: 1, padding: "24px", overflowY: "auto", display: "flex", flexDirection: "column" }}>
                         <ChatBox isRole="assistant" chatText="안녕하세요! 👋 여행 계획을 도와드리는 AI 어시스턴트입니다. 어떤 여행을 계획하고 계신가요?"/>
                         {chatting?.map((message, index) => (
                             <ChatBox key={index} isRole={message.role} chatText={message.content}/>
