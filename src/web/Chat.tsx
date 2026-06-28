@@ -27,7 +27,7 @@ export default function Chat() {
                 `http://127.0.0.1:8000/users/${user_uuid}/chats`
             )
 
-            setChatting(select_chat.data[0].chat ?? [])
+            setChatting(select_chat.data.chat ?? [])
         } catch (error) {
             console.error(error)
         }
